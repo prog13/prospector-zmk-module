@@ -76,6 +76,11 @@ config PROSPECTOR_FIXED_BRIGHTNESS
     range 1 100
     depends on !PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR
 
+config PROSPECTOR_USE_TOUCH
+    bool "Read the touch events"
+    default n
+    depends on DT_HAS_HYNITRON_CST816S_ENABLED
+
 config PROSPECTOR_LAYER_NAME_UPPERCASE
     bool "Display layer names in uppercase"
     default y

@@ -32,6 +32,14 @@ config LV_Z_FLUSH_THREAD
 config LV_Z_MEM_POOL_SIZE
     default 16384
 
+# Run the input thread at a higher priority than the display thread. At the default it gets
+# starved by rendering and drops touch events.
+config INPUT_THREAD_PRIORITY_OVERRIDE
+    default y if PROSPECTOR_USE_TOUCH
+
+config INPUT_THREAD_PRIORITY
+    default 4 if PROSPECTOR_USE_TOUCH
+
 config LV_DPI_DEF
     default 261
 
@@ -58,5 +66,8 @@ config LED
 config PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR
     select SENSOR
     select APDS9960
+
+config PROSPECTOR_USE_TOUCH
+    select INPUT
 
 endif
