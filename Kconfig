@@ -17,6 +17,11 @@ config PROSPECTOR_STATUS_SCREEN_FIELD
     help
         Minimal layout with flowing typing activity visualization
 
+config PROSPECTOR_STATUS_SCREEN_FLUX
+    bool "Flux layout"
+    help
+        Minimal layout drawing the field lines of a slowly wandering set of poles
+
 config PROSPECTOR_STATUS_SCREEN_OPERATOR
     bool "Operator layout"
     help

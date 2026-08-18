@@ -21,7 +21,7 @@ This is a [ZMK module](https://zmk.dev/docs/features/modules) that provides cust
 
 ## Features
 
-- Four status screen layouts to choose from
+- Five status screen layouts to choose from
 - Active layer display
 - Peripheral battery status
 - BLE profile and output indicator
@@ -72,6 +72,7 @@ Classic is used by default. To choose a different screen, add one of the followi
 ```ini
 CONFIG_PROSPECTOR_STATUS_SCREEN_RADII=y
 CONFIG_PROSPECTOR_STATUS_SCREEN_FIELD=y
+CONFIG_PROSPECTOR_STATUS_SCREEN_FLUX=y
 CONFIG_PROSPECTOR_STATUS_SCREEN_OPERATOR=y
 ```
 

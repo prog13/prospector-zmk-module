@@ -1,0 +1,16 @@
+if PROSPECTOR_STATUS_SCREEN_FLUX
+
+config ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+    select LV_USE_LABEL
+    select LV_COLOR_SCREEN_TRANSP
+    select ZMK_WPM
+
+config PROSPECTOR_ANIMATION_INTENSITY_DECAY_SEC
+    int "Time in seconds for the field to settle after typing stops"
+    default 10
+    range 5 120
+    help
+      Opacity, line length and how fast the field moves all fade together over this window
+      once you stop typing.
+
+endif

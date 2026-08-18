@@ -14,6 +14,8 @@
 #include "layouts/radii/status_screen.c"
 #elif defined(CONFIG_PROSPECTOR_STATUS_SCREEN_FIELD)
 #include "layouts/field/status_screen.c"
+#elif defined(CONFIG_PROSPECTOR_STATUS_SCREEN_FLUX)
+#include "layouts/flux/status_screen.c"
 #elif defined(CONFIG_PROSPECTOR_STATUS_SCREEN_OPERATOR)
 #include "layouts/operator/status_screen.c"
 #else
