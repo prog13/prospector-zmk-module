@@ -26,3 +26,6 @@ void zmk_widget_flux_lines_set_labels(struct zmk_widget_flux_lines *widget,
                                       lv_obj_t *battery_label);
 
 void zmk_widget_flux_lines_set_cell_excluded(int col, int row, bool excluded);
+
+/* Safe from the input thread. On release pass the last position; the field relaxes from there. */
+void zmk_widget_flux_lines_set_contact(int16_t screen_x, int16_t screen_y, bool pressed);

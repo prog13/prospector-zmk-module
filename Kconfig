@@ -110,6 +110,15 @@ config PROSPECTOR_TOUCH_BRIGHTNESS_TRAVEL
     range 1 1000
     depends on PROSPECTOR_TOUCH_BRIGHTNESS
 
+config PROSPECTOR_TOUCH_FIELD_POLE
+    bool "Make a fingertip a pole in the flux field"
+    default y
+    depends on PROSPECTOR_USE_TOUCH && PROSPECTOR_STATUS_SCREEN_FLUX
+    help
+      The contact becomes another pole in the field the stalks already follow, so
+      the field reorganises around the finger and relaxes once it lifts. Leaves the
+      brightness drag alone.
+
 config PROSPECTOR_LAYER_NAME_UPPERCASE
     bool "Display layer names in uppercase"
     default y

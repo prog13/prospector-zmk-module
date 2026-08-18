@@ -14,7 +14,7 @@ This is a [ZMK module](https://zmk.dev/docs/features/modules) that provides cust
 - [Status Screens](#status-screens)
 - [Usage](#usage)
 - [Configuration](#configuration)
-- [Touch Brightness](#touch-brightness)
+- [Touch](#touch)
 - [Troubleshooting](#troubleshooting)
 - [Known Issues](#known-issues)
 - [To-Do](#to-do)
@@ -27,7 +27,7 @@ This is a [ZMK module](https://zmk.dev/docs/features/modules) that provides cust
 - BLE profile and output indicator
 - Active modifier display
 - Caps word indicator
-- [Brightness control by dragging on the screen](#touch-brightness)
+- [Touch: brightness drag, a fingertip in the field](#touch)
 
 ## Installation
 
@@ -124,7 +124,7 @@ CONFIG_PROSPECTOR_FIXED_BRIGHTNESS=80
 | `CONFIG_PROSPECTOR_ANIMATION_INTENSITY_DECAY_SEC` | Seconds for lines to fade out after typing stops | 30 |
 | `CONFIG_PROSPECTOR_ANIMATION_FLOW_DECAY_SEC` | Seconds for line directions and length to settle | 300 |
 
-## Touch Brightness
+## Touch
 
 ### Options
 | Name | Description | Default |
@@ -132,7 +132,12 @@ CONFIG_PROSPECTOR_FIXED_BRIGHTNESS=80
 | `CONFIG_PROSPECTOR_USE_TOUCH` | Enable the touch panel | n |
 | `CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS` | Change brightness by dragging on the screen | y |
 | `CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS_TRAVEL` | Drag distance for the full brightness range, in panel counts. Raise it if the control feels too sensitive | 420 |
+| `CONFIG_PROSPECTOR_TOUCH_FIELD_POLE` | Make a fingertip a pole in the field (Flux) | y |
 | `CONFIG_PROSPECTOR_TOUCH_DEBUG` | Overlay a touch debug readout | n |
+
+Everything here needs `CONFIG_PROSPECTOR_USE_TOUCH=y` and the [wiring](#wiring) below.
+
+### Brightness
 
 `CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS` is on by default, but needs the touch panel enabled and the ambient light sensor off. Neither is the default, so set both:
 

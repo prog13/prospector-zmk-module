@@ -54,6 +54,12 @@ BUILD_ASSERT(VIEW_W == GRID_COLS && VIEW_H == GRID_ROWS, "flux view does not mat
  * cells never meet. */
 #define LENGTH_MAX              1.15f
 
+/* Feeds mag_mean too, so a larger charge turns lines rather than lengthening them. */
+#define TOUCH_CHARGE            3.0f
+#define TOUCH_SIZE              1.2f    // Softening, in cells
+#define TOUCH_RISE_MS           120
+#define TOUCH_FALL_MS           700
+
 #define OPACITY_BASE_IDLE       0.3f
 #define OPACITY_BASE_ACTIVE     0.5f
 #define OPACITY_ACTIVE_TRIM     0.15f
@@ -86,6 +92,32 @@ static inline float clampf(float val, float min_val, float max_val) {
 
 static inline float blend_to(float from, float to, float t) {
     return from + (to - from) * t;
+}
+
+static inline void blend_dir(float ax, float ay, float bx, float by, float t, float *ox, float *oy) {
+    float an = sqrtf(ax * ax + ay * ay);
+    float bn = sqrtf(bx * bx + by * by);
+
+    if (an == 0.0f || bn == 0.0f) {
+        *ox = ax + bx;
+        *oy = ay + by;
+        return;
+    }
+
+    /* Normalise first, or the longer vector dominates and the direction barely moves until t nears 1. */
+    ax /= an;
+    ay /= an;
+    bx /= bn;
+    by /= bn;
+
+    /* A line has no head: flip b onto a's side so the blend turns through the short arc. */
+    if (ax * bx + ay * by < 0.0f) {
+        bx = -bx;
+        by = -by;
+    }
+
+    *ox = blend_to(ax, bx, t);
+    *oy = blend_to(ay, by, t);
 }
 
 typedef struct {
@@ -138,11 +170,21 @@ static lv_opa_t line_opacity[CELL_COUNT];
 
 static float field_mag[CELL_COUNT];
 
+static struct k_spinlock contact_lock;
+static int16_t contact_x, contact_y;   // Screen pixels, written from the input thread
+/* Read outside the lock by timer_cb and contact_poll_cb; only the x/y pair needs the lock. */
+static volatile bool contact_pressed;
+static uint32_t contact_changed_at;
+
+static float touch_level = 0.0f;       // 0..1
+static float touch_lx, touch_ly;       // Lattice coordinates of the pole
+
 static uint64_t label_excluded_cells = 0;
 static uint64_t modifier_excluded_cells = 0;
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 static lv_timer_t *animation_timer = NULL;
+static lv_timer_t *contact_poll_timer = NULL;
 static uint32_t last_timer_period = TIMER_PERIOD_30HZ;
 
 static int wpm_event_handler(const zmk_event_t *eh) {
@@ -220,6 +262,39 @@ static void label_size_changed_cb(lv_event_t *e) {
     }
 }
 
+static float envelope_advance(float level, bool pressed, uint32_t ms) {
+    float rate = (float)ms / (pressed ? TOUCH_RISE_MS : TOUCH_FALL_MS);
+
+    return level + clampf((pressed ? 1.0f : 0.0f) - level, -rate, rate);
+}
+
+static void update_touch_pole(uint32_t now, uint32_t frame_ms) {
+    k_spinlock_key_t key = k_spin_lock(&contact_lock);
+    bool pressed = contact_pressed;
+    int16_t px = contact_x, py = contact_y;
+    uint32_t changed_at = contact_changed_at;
+    k_spin_unlock(&contact_lock, key);
+
+    if (pressed) {
+        struct zmk_widget_flux_lines *widget;
+        SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
+            lv_area_t coords;
+            lv_obj_get_coords(widget->obj, &coords);
+
+            touch_lx = VIEW_OFF_X + (px - coords.x1 - FLUX_LINES_GRID_OFFSET) / (float)SPACING;
+            touch_ly = VIEW_OFF_Y + (py - coords.y1 - FLUX_LINES_GRID_OFFSET) / (float)SPACING;
+            break;
+        }
+    }
+
+    /* frame_ms is uncapped, so crediting a whole frame to the new state would spend the
+     * entire ramp on the frame the contact changed. */
+    uint32_t after = MIN(now - changed_at, frame_ms);
+
+    touch_level = envelope_advance(touch_level, !pressed, frame_ms - after);
+    touch_level = envelope_advance(touch_level, pressed, after);
+}
+
 static uint32_t perf_update_us = 0;
 static uint32_t perf_draw_us = 0;
 static uint32_t perf_frame_count = 0;
@@ -248,6 +323,8 @@ static void flux_update(void) {
     intensity = intensity_state.current_value;
     intensity_at_stop = intensity_state.at_stop_value;
 
+    update_touch_pole(now, frame_ms);
+
     static float field_accum_ms = 0.0f;
     const float field_rate = FIELD_RATE_IDLE + intensity * (FIELD_RATE_TYPING - FIELD_RATE_IDLE);
 
@@ -263,6 +340,7 @@ static void flux_update(void) {
     flux_poles_sample(field_accum_ms / FLUX_POLES_STEP_MS, poles);
 
     const float soft2 = POLE_SIZE * POLE_SIZE;
+    const float touch_soft2 = TOUCH_SIZE * TOUCH_SIZE;
     float mag_sum = 0.0f;
 
     for (int y = 0; y < LAT_H; y++) {
@@ -278,6 +356,20 @@ static void flux_update(void) {
             }
 
             float mag = sqrtf(bx * bx + by * by);
+            float dirx = bx, diry = by;
+
+            /* Scaling the charge instead would ramp the field strength while the lines
+             * snapped to the new direction at once. */
+            if (touch_level > 0.0f) {
+                float dx = x - touch_lx;
+                float dy = y - touch_ly;
+                float w = TOUCH_CHARGE / (dx * dx + dy * dy + touch_soft2);
+                float tx = bx + dx * w, ty = by + dy * w;
+
+                blend_dir(bx, by, tx, ty, touch_level, &dirx, &diry);
+                mag = blend_to(mag, sqrtf(tx * tx + ty * ty), touch_level);
+            }
+
             mag_sum += mag;
 
             int col = x - VIEW_OFF_X;
@@ -289,7 +381,7 @@ static void flux_update(void) {
             int line_idx = row * GRID_COLS + col;
 
             field_mag[line_idx] = mag;
-            line_endpoint_idx[line_idx] = (uint8_t)angle_to_index(atan2f(by, bx));
+            line_endpoint_idx[line_idx] = (uint8_t)angle_to_index(atan2f(diry, dirx));
         }
     }
 
@@ -379,13 +471,25 @@ static void draw_cb(lv_event_t *e) {
     }
 }
 
+/* timer_cb re-picks its rate only when it fires, so at TIMER_PERIOD_2HZ a contact waits
+ * half a second for anything to move. */
+static void contact_poll_cb(lv_timer_t *timer) {
+    if (!contact_pressed || last_timer_period == TIMER_PERIOD_30HZ) {
+        return;
+    }
+
+    lv_timer_set_period(animation_timer, TIMER_PERIOD_30HZ);
+    last_timer_period = TIMER_PERIOD_30HZ;
+    lv_timer_ready(animation_timer);
+}
+
 static void timer_cb(lv_timer_t *timer) {
     perf_tick_count++;
     uint32_t now = k_uptime_get_32();
     uint32_t idle_ms = now - last_keypress_time;
 
     uint32_t target_period;
-    if (current_wpm > 0) {
+    if (current_wpm > 0 || contact_pressed || touch_level > 0.0f) {
         target_period = TIMER_PERIOD_30HZ;
     } else if (animation_started && idle_ms < DEEP_IDLE_AFTER_MS) {
         target_period = TIMER_PERIOD_15HZ;
@@ -422,6 +526,9 @@ int zmk_widget_flux_lines_init(struct zmk_widget_flux_lines *widget, lv_obj_t *p
         flux_poles_init();
         animation_timer = lv_timer_create(timer_cb, TIMER_PERIOD_30HZ, NULL);
     }
+    if (IS_ENABLED(CONFIG_PROSPECTOR_TOUCH_FIELD_POLE) && contact_poll_timer == NULL) {
+        contact_poll_timer = lv_timer_create(contact_poll_cb, TIMER_PERIOD_30HZ, NULL);
+    }
 
     return 0;
 }
@@ -456,4 +563,19 @@ void zmk_widget_flux_lines_set_cell_excluded(int col, int row, bool excluded) {
     } else {
         modifier_excluded_cells &= ~mask;
     }
+}
+
+void zmk_widget_flux_lines_set_contact(int16_t screen_x, int16_t screen_y, bool pressed) {
+    k_spinlock_key_t key = k_spin_lock(&contact_lock);
+
+    if (pressed != contact_pressed) {
+        contact_changed_at = k_uptime_get_32();
+    }
+    contact_pressed = pressed;
+    if (pressed) {
+        contact_x = screen_x;
+        contact_y = screen_y;
+    }
+
+    k_spin_unlock(&contact_lock, key);
 }
