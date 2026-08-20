@@ -12,6 +12,7 @@ if(CONFIG_SHIELD_PROSPECTOR_ADAPTER)
   zephyr_library_sources(src/brightness.c)
   zephyr_library_sources(src/custom_status_screen.c)
   zephyr_library_sources(src/display_rotate_init.c)
+  zephyr_library_sources_ifdef(CONFIG_CDC_ACM_DTE_RATE_CALLBACK_SUPPORT src/usb_dfu_touch.c)
 
   if(CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS)
     zephyr_library_sources(src/touch_brightness_drag.c)
