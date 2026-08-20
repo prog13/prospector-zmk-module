@@ -20,13 +20,19 @@ choice ST7789V_PIXEL_FORMAT
 	default ST7789V_RGB565
 endchoice
 
+# Ferro writes the panel itself; LVGL's buffer only ever holds label-sized redraws.
 config LV_Z_VDB_SIZE
+    default 12 if PROSPECTOR_STATUS_SCREEN_FERRO
     default 50
 
 config LV_Z_DOUBLE_VDB
+    default n if PROSPECTOR_STATUS_SCREEN_FERRO
     default y
 
+# Ferro writes the panel from the LVGL thread. With a separate flush thread, LVGL's own
+# writes would land on the bus in the middle of ferro's.
 config LV_Z_FLUSH_THREAD
+    default n if PROSPECTOR_STATUS_SCREEN_FERRO
     default y
 
 config LV_Z_MEM_POOL_SIZE

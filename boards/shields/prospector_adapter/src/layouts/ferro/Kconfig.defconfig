@@ -1,0 +1,17 @@
+if PROSPECTOR_STATUS_SCREEN_FERRO
+
+config ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+    select LV_USE_LABEL
+    select LV_COLOR_SCREEN_TRANSP
+    select ZMK_WPM
+
+config PROSPECTOR_ANIMATION_INTENSITY_DECAY_SEC
+    int "Time in seconds for the field to settle after typing stops"
+    default 10
+    range 5 120
+    help
+      The single window every typing response shares: how fast the fluid moves ramps up
+      and decays over this. Longer values = the lamp stays lively for longer after you
+      stop.
+
+endif

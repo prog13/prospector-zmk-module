@@ -22,6 +22,11 @@ config PROSPECTOR_STATUS_SCREEN_FLUX
     help
         Minimal layout drawing the field lines of a slowly wandering set of poles
 
+config PROSPECTOR_STATUS_SCREEN_FERRO
+    bool "Ferro layout"
+    help
+        The flux poles rendered as ferrofluid: filled blobs that drift, merge and split
+
 config PROSPECTOR_STATUS_SCREEN_OPERATOR
     bool "Operator layout"
     help
@@ -111,13 +116,51 @@ config PROSPECTOR_TOUCH_BRIGHTNESS_TRAVEL
     depends on PROSPECTOR_TOUCH_BRIGHTNESS
 
 config PROSPECTOR_TOUCH_FIELD_POLE
-    bool "Make a fingertip a pole in the flux field"
+    bool "Make a fingertip a pole in the field"
     default y
-    depends on PROSPECTOR_USE_TOUCH && PROSPECTOR_STATUS_SCREEN_FLUX
+    depends on PROSPECTOR_USE_TOUCH && (PROSPECTOR_STATUS_SCREEN_FLUX || PROSPECTOR_STATUS_SCREEN_FERRO)
     help
-      The contact becomes another pole in the field the stalks already follow, so
+      The contact becomes another pole in the field the layout draws, so
       the field reorganises around the finger and relaxes once it lifts. Leaves the
       brightness drag alone.
+
+choice PROSPECTOR_FERRO_PALETTE
+    prompt "Ferro palette"
+    default PROSPECTOR_FERRO_PALETTE_MONO
+    depends on PROSPECTOR_STATUS_SCREEN_FERRO
+    help
+      Two-colour monitor pairs from Obra Dinn's 1-bit set.
+
+config PROSPECTOR_FERRO_PALETTE_MACINTOSH
+    bool "Macintosh"
+
+config PROSPECTOR_FERRO_PALETTE_IBM8503
+    bool "IBM 8503 (warm grey)"
+
+config PROSPECTOR_FERRO_PALETTE_IBM5151
+    bool "IBM 5151 (green)"
+
+config PROSPECTOR_FERRO_PALETTE_ZENITH
+    bool "Zenith ZVM 1240 (amber)"
+
+config PROSPECTOR_FERRO_PALETTE_COMMODORE
+    bool "Commodore 1084 (blue)"
+
+config PROSPECTOR_FERRO_PALETTE_MONO
+    bool "Monochrome (grey on black)"
+
+endchoice
+
+# Index into ferro_palettes[]; the order is the generator's, not this file's.
+config PROSPECTOR_FERRO_PALETTE_INDEX
+    int
+    depends on PROSPECTOR_STATUS_SCREEN_FERRO
+    default 0 if PROSPECTOR_FERRO_PALETTE_MACINTOSH
+    default 1 if PROSPECTOR_FERRO_PALETTE_IBM8503
+    default 2 if PROSPECTOR_FERRO_PALETTE_IBM5151
+    default 3 if PROSPECTOR_FERRO_PALETTE_ZENITH
+    default 4 if PROSPECTOR_FERRO_PALETTE_COMMODORE
+    default 5
 
 config PROSPECTOR_LAYER_NAME_UPPERCASE
     bool "Display layer names in uppercase"

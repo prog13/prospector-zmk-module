@@ -147,6 +147,8 @@ static int st7789v_set_mem_area(const struct device *dev, const uint16_t x,
 	return st7789v_transmit(dev, ST7789V_CMD_RASET, (uint8_t *)&spi_data[0], 4);
 }
 
+uint32_t prospector_panel_writes, prospector_panel_px;
+
 static int st7789v_write(const struct device *dev,
 			 const uint16_t x,
 			 const uint16_t y,
@@ -164,6 +166,11 @@ static int st7789v_write(const struct device *dev,
 	__ASSERT(desc->width <= desc->pitch, "Pitch is smaller than width");
 	__ASSERT((desc->pitch * ST7789V_PIXEL_SIZE * desc->height) <= desc->buf_size,
 			"Input buffer too small");
+
+	/* The ferro layout compares this against its own write count to detect anyone else
+	 * writing the panel; see panel_writes_seen there. */
+	prospector_panel_writes++;
+	prospector_panel_px += (uint32_t)desc->width * desc->height;
 
 	LOG_DBG("Writing %dx%d (w,h) @ %dx%d (x,y)",
 		desc->width, desc->height, x, y);

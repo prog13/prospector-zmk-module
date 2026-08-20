@@ -2,7 +2,7 @@
 
 This is a [ZMK module](https://zmk.dev/docs/features/modules) that provides custom status screen support for the [Prospector](https://github.com/carrefinho/prospector) display dongle.
 
-![Four status screen layouts for Prospector](docs/images/status-screen-update-hero.png)
+![Six status screen layouts for Prospector](docs/images/status-screen-update-hero.png)
 
 > [!IMPORTANT]
 > This branch is a work-in-progress and is only compatible with the Zephyr 4.1 version of ZMK (current main).
@@ -21,7 +21,7 @@ This is a [ZMK module](https://zmk.dev/docs/features/modules) that provides cust
 
 ## Features
 
-- Five status screen layouts to choose from
+- Six status screen layouts to choose from
 - Active layer display
 - Peripheral battery status
 - BLE profile and output indicator
@@ -73,6 +73,7 @@ Classic is used by default. To choose a different screen, add one of the followi
 CONFIG_PROSPECTOR_STATUS_SCREEN_RADII=y
 CONFIG_PROSPECTOR_STATUS_SCREEN_FIELD=y
 CONFIG_PROSPECTOR_STATUS_SCREEN_FLUX=y
+CONFIG_PROSPECTOR_STATUS_SCREEN_FERRO=y
 CONFIG_PROSPECTOR_STATUS_SCREEN_OPERATOR=y
 ```
 
@@ -114,7 +115,7 @@ CONFIG_PROSPECTOR_FIXED_BRIGHTNESS=80
 | Name | Description | Default |
 | ---- | ----------- | ------- |
 | `CONFIG_PROSPECTOR_SHOW_MODIFIERS` | Display modifier key indicators | y |
-| `CONFIG_PROSPECTOR_SHOW_INACTIVE_MODIFIERS` | Show inactive modifiers dimmed (Classic and Field only) | y |
+| `CONFIG_PROSPECTOR_SHOW_INACTIVE_MODIFIERS` | Show inactive modifiers dimmed (not on Operator or Radii) | y |
 | `CONFIG_PROSPECTOR_MODIFIER_ORDER` | Order of modifiers: G=GUI, A=Alt, C=Ctrl, S=Shift | "GACS" |
 
 ### Field-specific
@@ -124,6 +125,24 @@ CONFIG_PROSPECTOR_FIXED_BRIGHTNESS=80
 | `CONFIG_PROSPECTOR_ANIMATION_INTENSITY_DECAY_SEC` | Seconds for lines to fade out after typing stops | 30 |
 | `CONFIG_PROSPECTOR_ANIMATION_FLOW_DECAY_SEC` | Seconds for line directions and length to settle | 300 |
 
+### Flux and Ferro
+| Name | Description | Default |
+| ---- | ----------- | ------- |
+| `CONFIG_PROSPECTOR_ANIMATION_INTENSITY_DECAY_SEC` | Seconds for the field to settle after typing stops | 10 (5-120) |
+
+Ferro only:
+
+| Name | Description | Default |
+| ---- | ----------- | ------- |
+| `CONFIG_PROSPECTOR_FERRO_PALETTE_MONO` | Monochrome, grey on black | y |
+| `CONFIG_PROSPECTOR_FERRO_PALETTE_MACINTOSH` | Macintosh | n |
+| `CONFIG_PROSPECTOR_FERRO_PALETTE_IBM8503` | IBM 8503, warm grey | n |
+| `CONFIG_PROSPECTOR_FERRO_PALETTE_IBM5151` | IBM 5151, green | n |
+| `CONFIG_PROSPECTOR_FERRO_PALETTE_ZENITH` | Zenith ZVM 1240, amber | n |
+| `CONFIG_PROSPECTOR_FERRO_PALETTE_COMMODORE` | Commodore 1084, blue | n |
+
+The palettes are a choice, so set exactly one.
+
 ## Touch
 
 ### Options
@@ -132,7 +151,7 @@ CONFIG_PROSPECTOR_FIXED_BRIGHTNESS=80
 | `CONFIG_PROSPECTOR_USE_TOUCH` | Enable the touch panel | n |
 | `CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS` | Change brightness by dragging on the screen | y |
 | `CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS_TRAVEL` | Drag distance for the full brightness range, in panel counts. Raise it if the control feels too sensitive | 420 |
-| `CONFIG_PROSPECTOR_TOUCH_FIELD_POLE` | Make a fingertip a pole in the field (Flux) | y |
+| `CONFIG_PROSPECTOR_TOUCH_FIELD_POLE` | Make a fingertip a pole in the field (Flux and Ferro) | y |
 | `CONFIG_PROSPECTOR_TOUCH_DEBUG` | Overlay a touch debug readout | n |
 
 Everything here needs `CONFIG_PROSPECTOR_USE_TOUCH=y` and the [wiring](#wiring) below.
