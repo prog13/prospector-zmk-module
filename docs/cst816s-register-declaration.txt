@@ -1,0 +1,224 @@
+===== page 1 =====
+GestureID @0x01
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. GestureID
+Bit Item Description
+[7:0] GestureID Gesture ID
+0x00: No gesture
+0x01: Slide up
+0x02: Slide down
+0x03: Slide left
+0x04: Slide right
+0x05: Single click
+0x0B: Double click
+0x0C: Long press
+FingerNum @0x02
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. FingerNum
+Bit Item Description
+[7:0] FingerNum Finger Numbers 0: no finger 1: one finger
+XposH @0x03
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. Xpos[11:8]
+Bit Item Description
+[3:0] XPos High 4 bits of the X coordinate
+XposL @0x04
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. Xpos[7:0]
+Bit Item Description
+[7:0] XPos Low 8 bits of the X coordinate
+YposH @0x05
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. Ypos[11:8]
+Bit Item Description
+[3:0] YPos High 4 bits of the Y coordinate
+YposL @0x06
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. Ypos[7:0]
+Bit Item Description
+[7:0] YPos Low 8 bits of the Y coordinate
+BPC0H @0xB0
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. BPC0[15:8]
+
+===== page 2 =====
+Bit Item Description
+[7:0] BPC0H High 8 bits of the BPC0 value
+BPC0L @0xB1
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. BPC0[7:0]
+Bit Item Description
+[7:0] BPC0L Low 8 bits of the BPC0 value
+BPC1H @0xB2
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. BPC1[15:8]
+Bit Item Description
+[7:0] BPC1H High 8 bits of the BPC1 value
+BPC1L @0xB3
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. BPC1[7:0]
+Bit Item Description
+[7:0] BPC1L Low 8 bits of the BPC1 value
+ChipID @0xA7
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. ChipID
+Bit Item Description
+[7:0] ChipID Chip ID
+ProjID @0xA8
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. ProjID
+Bit Item Description
+[7:0] ProjID Project ID
+FwVersion @0xA9
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. FwVersion
+Bit Item Description
+[7:0] FwVersion Software Version
+MotionMask @0xEC
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. EnConLR EnConUD EnDClick
+Bit Item Description
+[2] EnConLR Enable Continuous Left-Right (LR) Scrolling Action
+[1] EnConUD Enable Continuous Up-Down (UD) Scrolling Action
+[0] EnDClick Enable Double Click Action
+
+===== page 3 =====
+IrqPluseWidth @0xED
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. IrqPluseWidth
+Bit Item Description
+[7:0] IrqPluseWidth Interrupt low-pluse output width
+Unit: 0.1ms, Range: 1～200, Default: 10
+NorScanPer @0xEE
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. NorScanPer
+Bit Item Description
+[7:0] NorScanPer Normal quick-scanning Period
+This value will affect LpAutoWakeTime and
+AutoSleepTime. Unit: 10ms, Range: 1～30,
+Default: 1
+MotionSlAngle @0xEF
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. MotionSlAngle
+Bit Item Description
+[7:0] MotionSlAngle Gesture detection sliding area angle control.
+Angle=tan(c)*10 where c is the angle with
+respect to the positive x-axis.
+LpScanRaw1H @0xF0
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. LpScanRaw1H
+Bit Item Description
+[7:0] LpScanRaw1H High 8 bits of the reference value for low-power
+scanning channel 1
+LpScanRaw1L @0xF1
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. LpScanRaw1L
+Bit Item Description
+[7:0] LpScanRaw1L Low 8 bits of the reference value for low-
+power scanning channel 1
+LpScanRaw2H @0xF2
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. LpScanRaw2H
+Bit Item Description
+[7:0] LpScanRaw2H High 8 bits of the reference value
+for low-power scanning channel 2
+LpScanRaw2L @0xF3
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. LpScanRaw2L
+Bit Item Description
+[7:0] LpScanRaw2L Low 8 bits of the reference value
+for low-power scanning channel 2
+LpAutoWakeTime @0xF4
+
+===== page 4 =====
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. LpAutoWakeTime
+Bit Item Description
+[7:0] LpAutoWakeTime Automatic recalibration period during low
+power mode. Unit: 1 minute, Range: 1～5,
+Default:5
+LpScanTH @0xF5
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. LpScanTH
+Bit Item Description
+[7:0] LpScanTH Low power scanning wake-up threshold. The
+smaller it is, the more sensitive it is.
+Range: 1～255, Default: 48
+LpScanWin @0xF6
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. LpScanWin
+Bit Item Description
+[7:0] LpScanWin Low-power scanning measurement range. The
+greater it is, the more sensitive and the
+more power consumption it is.
+Range: 0, 1, 2, 3; Default: 3
+LpScanFreq @0xF7
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. LpScanFreq
+Bit Item Description
+[7:0] LpScanFreq Low-power scanning frequency, the smaller it
+is, the more sensitive it is.
+Range: 1～255; Default: 7
+LpScanIdac @0xF8
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. LpScanIdac
+Bit Item Description
+[7:0] LpScanIdac Low-power scanning current. The smaller it is,
+the more sensitive it is. Range: 1～255
+AutoSleepTime @0xF9
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. AutoSleepTime
+Bit Item Description
+[7:0] AutoSleepTime Automatically enter low-power mode if there
+is no touch in x seconds. Unit: 1s, Default:
+2s.
+IrqCtl @0xFA
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. EnTest EnTouch EnChange OnceWLP
+Bit Item Description
+[7] EnTest Interrupt pin test, automatically generates low pulses
+periodically after being enabled
+[6] EnTouch Generates low pulses when the touch is detected
+
+===== page 5 =====
+[5] EnChange Generates low pulses when touch is changed.
+[4] EnMotion Generates low pulses when gesture is detected.
+[0] OnceWLP Only generates one low pulse when log press gesture
+AutoReset @0xFB
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. DebouceTime
+Bit Item Description
+[7:0] DebounceTime Automatically reset if there is touch but no
+valid gesture within x seconds.
+Unit: 1S, Disable: 0, Default:
+LongPressTime @0xFC
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. LongPressTime
+Bit Item Description
+[7:0] LongPressTime Auto reset after long press x seconds
+Unit: 1S, Disable: 0, Default: 10
+IOCtl @0xFD
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. SOFT_RST IIC_OD En1v8
+Bit Item Description
+[2] SOFT_RST The main controller achieves touch
+soft reset functionality by pulling
+down the IRQ pin.
+0: Disable soft reset
+1: Enable soft reset
+[1] IIC_OD IIC pin driver mode, pull up
+resistor by default.
+0: pull up resistor
+1: OD
+[0] En1v8 IIC and IRQ pin level selection, VDD level by
+default.
+0: VDD
+1: 1.8V
+DisAutoSleep @0xFE
+Bit7 Bit6 Bit5 Bit4 Bit3 Bit2 Bit1 Bit0
+Desc. DisAutoSleep
+Bit Item Description
+[7:0] DisAutoSleep 0 by default, enable automatic entry into
+low-power mode
+When non-zero, disable automatic entry into
+low-power mode
