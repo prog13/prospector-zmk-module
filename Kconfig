@@ -162,6 +162,14 @@ config PROSPECTOR_FERRO_PALETTE_INDEX
     default 4 if PROSPECTOR_FERRO_PALETTE_COMMODORE
     default 5
 
+config PROSPECTOR_FERRO_PALETTE_CYCLE
+    bool "Double tap the screen to step to the next palette"
+    default y
+    depends on PROSPECTOR_STATUS_SCREEN_FERRO && PROSPECTOR_USE_TOUCH
+    select INPUT_CST816S_EV_DEVICE
+    help
+      Not persisted; a reboot returns to the palette chosen above.
+
 config PROSPECTOR_LAYER_NAME_UPPERCASE
     bool "Display layer names in uppercase"
     default y

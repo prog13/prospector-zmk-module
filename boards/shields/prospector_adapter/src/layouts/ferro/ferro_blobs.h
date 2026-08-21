@@ -35,6 +35,9 @@ void zmk_widget_ferro_blobs_set_text(enum ferro_text_slot slot, lv_obj_t *label)
 /* Wakes the render timer after a label change; the label itself is re-read on the next frame. */
 void zmk_widget_ferro_blobs_text_dirty(void);
 
+/* Requests the next palette. Safe from the input thread. */
+void zmk_widget_ferro_blobs_request_palette_next(void);
+
 /* Where the screen is being touched, in screen pixels. Safe from the input thread. On release
  * pass the last position; the droplet drains from there. */
 void zmk_widget_ferro_blobs_set_contact(int16_t screen_x, int16_t screen_y, bool pressed);

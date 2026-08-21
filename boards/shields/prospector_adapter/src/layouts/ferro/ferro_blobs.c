@@ -255,6 +255,9 @@ static int16_t contact_x, contact_y; /* Screen pixels, written from the input th
 /* Also read outside the lock, by timer_cb and contact_poll_cb; only the x/y pair needs it. */
 static volatile bool contact_pressed;
 static uint32_t contact_changed_at;
+/* Set from the input thread on double-click. The switch itself runs in contact_poll_cb because
+ * it restyles LVGL widgets, which only the LVGL thread may do. */
+static atomic_t palette_next_pending;
 
 static float touch_level = 0.0f; /* 0..1, one envelope for both the rise and the tail */
 static float touch_px, touch_py; /* Widget-local pixels */
@@ -1432,9 +1435,12 @@ static void ferro_update(void) {
 }
 
 /* Runs at 30Hz regardless of tier. timer_cb only re-picks its rate when it fires, so at the 2Hz
- * tier a touch or a foreign panel write would wait up to half a second; this fires the animation
- * timer as soon as one appears. */
+ * tier a touch, a palette request or a foreign panel write would wait for the next 2Hz tick;
+ * this fires the animation timer as soon as one appears. */
 static void contact_poll_cb(lv_timer_t *timer) {
+    if (atomic_cas(&palette_next_pending, 1, 0)) {
+        ferro_palette_next();
+    }
     if (prospector_panel_writes != panel_writes_seen) {
         lv_timer_ready(animation_timer);
         return;
@@ -1669,7 +1675,9 @@ int zmk_widget_ferro_blobs_init(struct zmk_widget_ferro_blobs *widget, lv_obj_t 
         lv_display_enable_invalidation(lv_display_get_default(), false);
         animation_timer = lv_timer_create(timer_cb, TIMER_PERIOD_30HZ, NULL);
     }
-    if (IS_ENABLED(CONFIG_PROSPECTOR_TOUCH_FIELD_POLE) && contact_poll_timer == NULL) {
+    if ((IS_ENABLED(CONFIG_PROSPECTOR_TOUCH_FIELD_POLE) ||
+         IS_ENABLED(CONFIG_PROSPECTOR_FERRO_PALETTE_CYCLE)) &&
+        contact_poll_timer == NULL) {
         contact_poll_timer = lv_timer_create(contact_poll_cb, TIMER_PERIOD_30HZ, NULL);
     }
 
@@ -1721,4 +1729,8 @@ void zmk_widget_ferro_blobs_set_contact(int16_t screen_x, int16_t screen_y, bool
     }
 
     k_spin_unlock(&contact_lock, key);
+}
+
+void zmk_widget_ferro_blobs_request_palette_next(void) {
+    atomic_set(&palette_next_pending, 1);
 }

@@ -27,7 +27,7 @@ This is a [ZMK module](https://zmk.dev/docs/features/modules) that provides cust
 - BLE profile and output indicator
 - Active modifier display
 - Caps word indicator
-- [Touch: brightness drag, a fingertip in the field](#touch)
+- [Touch: brightness drag, a fingertip in the field, palette cycling](#touch)
 
 ## Installation
 
@@ -152,6 +152,7 @@ The palettes are a choice, so set exactly one.
 | `CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS` | Change brightness by dragging on the screen | y |
 | `CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS_TRAVEL` | Drag distance for the full brightness range, in panel counts. Raise it if the control feels too sensitive | 420 |
 | `CONFIG_PROSPECTOR_TOUCH_FIELD_POLE` | Make a fingertip a pole in the field (Flux and Ferro) | y |
+| `CONFIG_PROSPECTOR_FERRO_PALETTE_CYCLE` | Double tap to step to the next Ferro palette | y |
 | `CONFIG_PROSPECTOR_TOUCH_DEBUG` | Overlay a touch debug readout | n |
 
 Everything here needs `CONFIG_PROSPECTOR_USE_TOUCH=y` and the [wiring](#wiring) below.
@@ -166,6 +167,8 @@ CONFIG_PROSPECTOR_USE_TOUCH=y
 ```
 
 Brightness is not persisted; a power cycle returns to `CONFIG_PROSPECTOR_FIXED_BRIGHTNESS`.
+
+The palette a double tap selects is not persisted either; a reboot returns to the palette set in the config.
 
 ### Wiring
 
