@@ -14,6 +14,7 @@ This is a [ZMK module](https://zmk.dev/docs/features/modules) that provides cust
 - [Status Screens](#status-screens)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [Touch Brightness](#touch-brightness)
 - [Troubleshooting](#troubleshooting)
 - [Known Issues](#known-issues)
 - [To-Do](#to-do)
@@ -26,6 +27,7 @@ This is a [ZMK module](https://zmk.dev/docs/features/modules) that provides cust
 - BLE profile and output indicator
 - Active modifier display
 - Caps word indicator
+- [Brightness control by dragging on the screen](#touch-brightness)
 
 ## Installation
 
@@ -120,6 +122,44 @@ CONFIG_PROSPECTOR_FIXED_BRIGHTNESS=80
 | `CONFIG_PROSPECTOR_ANIMATION_WPM_REFERENCE` | WPM value at which animation reaches max speed | 70 |
 | `CONFIG_PROSPECTOR_ANIMATION_INTENSITY_DECAY_SEC` | Seconds for lines to fade out after typing stops | 30 |
 | `CONFIG_PROSPECTOR_ANIMATION_FLOW_DECAY_SEC` | Seconds for line directions and length to settle | 300 |
+
+## Touch Brightness
+
+### Options
+| Name | Description | Default |
+| ---- | ----------- | ------- |
+| `CONFIG_PROSPECTOR_USE_TOUCH` | Enable the touch panel | n |
+| `CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS` | Change brightness by dragging on the screen | y |
+| `CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS_TRAVEL` | Drag distance for the full brightness range, in panel counts. Raise it if the control feels too sensitive | 420 |
+| `CONFIG_PROSPECTOR_TOUCH_DEBUG` | Overlay a touch debug readout | n |
+
+`CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS` is on by default, but needs the touch panel enabled and the ambient light sensor off. Neither is the default, so set both:
+
+```ini
+CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR=n
+CONFIG_PROSPECTOR_USE_TOUCH=y
+```
+
+Brightness is not persisted; a power cycle returns to `CONFIG_PROSPECTOR_FIXED_BRIGHTNESS`.
+
+### Wiring
+
+On Waveshare's [1.69inch](https://www.waveshare.com/wiki/1.69inch_Touch_LCD_Module) and [1.83inch](https://docs.waveshare.com/1.83inch_Touch_LCD_Module) touch modules, connect these four header pins to the XIAO:
+
+| Header pin | Signal | XIAO pad |
+| ---------- | ------ | -------- |
+| 9 | TP_SDA | D4 |
+| 10 | TP_SCL | D5 |
+| 11 | TP_RST | D1 |
+| 12 | TP_INT | D0 |
+
+Then enable the node in your config repo's shield overlay:
+
+```dts
+&cst816s {
+    status = "okay";
+};
+```
 
 ## Troubleshooting
 

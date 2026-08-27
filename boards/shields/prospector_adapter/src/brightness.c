@@ -5,6 +5,8 @@
 #include <zephyr/drivers/led.h>
 #include <zephyr/sys/printk.h>
 
+#include <brightness.h>
+
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(als, 4);
 
@@ -147,8 +149,29 @@ K_THREAD_DEFINE(als_tid, 1024, als_thread, NULL, NULL, NULL, K_LOWEST_APPLICATIO
 
 #else
 
+static uint8_t current_brightness = CONFIG_PROSPECTOR_FIXED_BRIGHTNESS;
+
+void prospector_brightness_set(int level) {
+    if (level < PROSPECTOR_BRIGHTNESS_MIN) {
+        level = PROSPECTOR_BRIGHTNESS_MIN;
+    } else if (level > PROSPECTOR_BRIGHTNESS_MAX) {
+        level = PROSPECTOR_BRIGHTNESS_MAX;
+    }
+
+    if (led_set_brightness(pwm_leds_dev, DISP_BL, (uint8_t)level)) {
+        LOG_ERR("Failed to set brightness");
+        return;
+    }
+
+    current_brightness = (uint8_t)level;
+}
+
+uint8_t prospector_brightness_get(void) {
+    return current_brightness;
+}
+
 static int init_fixed_brightness(void) {
-    led_set_brightness(pwm_leds_dev, DISP_BL, CONFIG_PROSPECTOR_FIXED_BRIGHTNESS);
+    prospector_brightness_set(CONFIG_PROSPECTOR_FIXED_BRIGHTNESS);
 
     return 0;
 }

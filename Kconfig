@@ -86,6 +86,25 @@ config PROSPECTOR_TOUCH_DEBUG
     default n
     depends on PROSPECTOR_USE_TOUCH
 
+choice PROSPECTOR_TOUCH_BRIGHTNESS_CONTROL
+    prompt "Touch control for display brightness"
+    default PROSPECTOR_TOUCH_BRIGHTNESS
+    depends on PROSPECTOR_USE_TOUCH && !PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR
+
+config PROSPECTOR_TOUCH_BRIGHTNESS_NONE
+    bool "Leave the brightness alone"
+
+config PROSPECTOR_TOUCH_BRIGHTNESS
+    bool "Drag up and down the screen"
+
+endchoice
+
+config PROSPECTOR_TOUCH_BRIGHTNESS_TRAVEL
+    int "Drag distance for the full brightness range, in panel counts"
+    default 420
+    range 1 1000
+    depends on PROSPECTOR_TOUCH_BRIGHTNESS
+
 config PROSPECTOR_LAYER_NAME_UPPERCASE
     bool "Display layer names in uppercase"
     default y
