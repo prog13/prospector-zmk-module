@@ -8,7 +8,7 @@
 #include <brightness.h>
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(als, 4);
+LOG_MODULE_REGISTER(brightness, CONFIG_ZMK_LOG_LEVEL);
 
 static const struct device *pwm_leds_dev = DEVICE_DT_GET_ONE(pwm_leds);
 #define DISP_BL DT_NODE_CHILD_IDX(DT_NODELABEL(disp_bl))
