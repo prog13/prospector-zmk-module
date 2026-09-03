@@ -16,11 +16,8 @@
 
 #define TOUCH_BRIGHTNESS_INIT_PRIORITY 99
 
-static const struct prospector_touch_brightness_drag_settings settings = {
-    .travel = CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS_TRAVEL,
-    /* Rotating the image 180 does not rotate the touch panel, so the drag direction flips. */
-    .inverted = IS_ENABLED(CONFIG_PROSPECTOR_ROTATE_DISPLAY_180),
-};
+static const struct prospector_touch_brightness_drag_settings settings =
+    PROSPECTOR_TOUCH_BRIGHTNESS_DRAG_SETTINGS_DEFAULT;
 
 static struct prospector_touch_brightness_drag_state state;
 static struct prospector_touch_brightness_drag_report pending;

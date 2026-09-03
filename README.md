@@ -166,6 +166,8 @@ CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR=n
 CONFIG_PROSPECTOR_USE_TOUCH=y
 ```
 
+On Ferro the drag is gated, since pushing the blobs around would otherwise move the backlight. A contact that starts at the right edge and moves inward shows the level in the middle of the screen; dragging up and down anywhere then sets it, until the finger has been off the glass for two seconds: the readout fades and the next change needs another edge swipe.
+
 Brightness is not persisted; a power cycle returns to `CONFIG_PROSPECTOR_FIXED_BRIGHTNESS`.
 
 The palette a double tap selects is not persisted either; a reboot returns to the palette set in the config.

@@ -17,7 +17,10 @@ enum ferro_text_slot {
     FERRO_TEXT_OUT_LINK, /* the connection widget's two labels */
     FERRO_TEXT_OUT_PROFILE,
     FERRO_TEXT_MOD_0, /* four modifier slots, FERRO_TEXT_MOD_0 + i */
-    FERRO_TEXT_COUNT = FERRO_TEXT_MOD_0 + 4,
+#ifdef CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS
+    FERRO_TEXT_BRIGHTNESS = FERRO_TEXT_MOD_0 + 4, /* the readout, in a bigger font than the rest */
+#endif
+    FERRO_TEXT_COUNT = FERRO_TEXT_MOD_0 + 4 + IS_ENABLED(CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS),
 };
 
 struct zmk_widget_ferro_blobs {
@@ -34,6 +37,10 @@ void zmk_widget_ferro_blobs_set_text(enum ferro_text_slot slot, lv_obj_t *label)
 
 /* Wakes the render timer after a label change; the label itself is re-read on the next frame. */
 void zmk_widget_ferro_blobs_text_dirty(void);
+
+/* Fades a label ferro draws to full or to nothing, from wherever it is now, telling ferro about
+ * every step. LVGL's own fade would animate with nothing redrawing. */
+void zmk_widget_ferro_blobs_fade(lv_obj_t *obj, bool in);
 
 /* Requests the next palette. Safe from the input thread. */
 void zmk_widget_ferro_blobs_request_palette_next(void);

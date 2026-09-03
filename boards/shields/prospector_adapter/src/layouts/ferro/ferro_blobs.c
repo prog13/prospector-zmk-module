@@ -429,7 +429,7 @@ static void add_range(int y, int x1, int x2) {
 #define TXT_SML_W 48 /* One modifier glyph, plus slack for the ±2 of raster margin */
 #define TXT_SML_H 44
 #define TXT_BIG_N 2
-#define TXT_SML_N (FERRO_TEXT_COUNT - TXT_BIG_N)
+#define TXT_SML_N (FERRO_TEXT_COUNT - TXT_BIG_N - IS_ENABLED(CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS))
 
 static uint8_t cov_big[TXT_BIG_N][TXT_BIG_H * (TXT_BIG_W / 2)];
 static uint8_t cov_sml[TXT_SML_N][TXT_SML_H * (TXT_SML_W / 2)];
@@ -437,6 +437,13 @@ static uint8_t cov_sml[TXT_SML_N][TXT_SML_H * (TXT_SML_W / 2)];
  * slot box. lo > hi marks a row with no ink. */
 static int16_t ink_big[TXT_BIG_N][TXT_BIG_H][2];
 static int16_t ink_sml[TXT_SML_N][TXT_SML_H][2];
+
+#ifdef CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS
+#define TXT_RDO_W 164 /* Brightness readout: brightness_readout.c's READOUT_W, plus the ±2 */
+#define TXT_RDO_H 52  /* FR_Regular_48's line height */
+static uint8_t cov_rdo[TXT_RDO_H * (TXT_RDO_W / 2)];
+static int16_t ink_rdo[TXT_RDO_H][2];
+#endif
 
 static struct text_slot {
     lv_obj_t *obj;
@@ -471,6 +478,14 @@ static void text_slots_init(void) {
             s->wmax = TXT_BIG_W;
             s->hmax = TXT_BIG_H;
             s->pitch = TXT_BIG_W / 2;
+#ifdef CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS
+        } else if (i == FERRO_TEXT_BRIGHTNESS) {
+            s->cov = cov_rdo;
+            s->ink = ink_rdo;
+            s->wmax = TXT_RDO_W;
+            s->hmax = TXT_RDO_H;
+            s->pitch = TXT_RDO_W / 2;
+#endif
         } else {
             s->cov = cov_sml[i - TXT_BIG_N];
             s->ink = ink_sml[i - TXT_BIG_N];
@@ -720,10 +735,12 @@ static void text_refresh(int ox, int oy) {
                 }
             }
         }
-        LOG_INF("ferro text %d%d%d%d%d%d%d%d ink=%u", text_slots[0].live,
-                text_slots[1].live, text_slots[2].live, text_slots[3].live,
-                text_slots[4].live, text_slots[5].live, text_slots[6].live,
-                text_slots[7].live, px);
+        char live[FERRO_TEXT_COUNT + 1];
+        for (int i = 0; i < FERRO_TEXT_COUNT; i++) {
+            live[i] = text_slots[i].live ? '1' : '0';
+        }
+        live[FERRO_TEXT_COUNT] = '\0';
+        LOG_INF("ferro text %s ink=%u", live, px);
     }
 #endif
 }
@@ -1714,6 +1731,26 @@ void zmk_widget_ferro_blobs_text_dirty(void) {
     if (animation_timer != NULL) {
         lv_timer_ready(animation_timer);
     }
+}
+
+#define TEXT_FADE_MS 200
+
+static void fade_step(void *obj, int32_t opa) {
+    lv_obj_set_style_opa(obj, opa, LV_PART_MAIN);
+    zmk_widget_ferro_blobs_text_dirty();
+}
+
+void zmk_widget_ferro_blobs_fade(lv_obj_t *obj, bool in) {
+    const int32_t from = lv_obj_get_style_opa(obj, LV_PART_MAIN);
+    const int32_t to = in ? LV_OPA_COVER : LV_OPA_TRANSP;
+    lv_anim_t anim;
+    lv_anim_init(&anim);
+    lv_anim_set_var(&anim, obj);
+    lv_anim_set_values(&anim, from, to);
+    lv_anim_set_exec_cb(&anim, fade_step);
+    /* A fade that starts part-way is shortened to keep its speed. */
+    lv_anim_set_duration(&anim, TEXT_FADE_MS * (to > from ? to - from : from - to) / LV_OPA_COVER);
+    lv_anim_start(&anim);
 }
 
 void zmk_widget_ferro_blobs_set_contact(int16_t screen_x, int16_t screen_y, bool pressed) {

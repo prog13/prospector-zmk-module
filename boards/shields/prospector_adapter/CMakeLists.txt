@@ -16,7 +16,10 @@ if(CONFIG_SHIELD_PROSPECTOR_ADAPTER)
 
   if(CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS)
     zephyr_library_sources(src/touch_brightness_drag.c)
-    zephyr_library_sources(src/touch_brightness.c)
+    # Ferro gates the drag itself, in layouts/ferro/touch_pole.c.
+    if(NOT CONFIG_PROSPECTOR_STATUS_SCREEN_FERRO)
+      zephyr_library_sources(src/touch_brightness.c)
+    endif()
   endif()
 
   if(CONFIG_PROSPECTOR_TOUCH_DEBUG)
@@ -48,14 +51,19 @@ if(CONFIG_SHIELD_PROSPECTOR_ADAPTER)
     endif()
   elseif(CONFIG_PROSPECTOR_STATUS_SCREEN_FERRO)
     file(GLOB layout_sources src/layouts/ferro/*.c)
-    list(FILTER layout_sources EXCLUDE REGEX "(status_screen|touch_pole|touch_palette)\\.c$")
+    list(FILTER layout_sources EXCLUDE REGEX
+         "(status_screen|touch_pole|touch_palette|brightness_readout)\\.c$")
     zephyr_library_sources(${layout_sources})
     zephyr_library_sources(src/layouts/flux/flux_poles.c)
     # These two are per-pixel hot loops; at the default -Os they miss frames.
     set_source_files_properties(src/layouts/ferro/ferro_blobs.c src/layouts/flux/flux_poles.c
                                 PROPERTIES COMPILE_OPTIONS "-O2")
-    if(CONFIG_PROSPECTOR_TOUCH_FIELD_POLE)
+    if(CONFIG_PROSPECTOR_TOUCH_FIELD_POLE OR CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS)
       zephyr_library_sources(src/layouts/ferro/touch_pole.c)
+    endif()
+    if(CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS)
+      zephyr_library_sources(src/touch_brightness_gate.c)
+      zephyr_library_sources(src/layouts/ferro/brightness_readout.c)
     endif()
     if(CONFIG_PROSPECTOR_FERRO_PALETTE_CYCLE)
       zephyr_library_sources(src/layouts/ferro/touch_palette.c)

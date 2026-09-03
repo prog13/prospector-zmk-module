@@ -19,6 +19,16 @@ struct prospector_touch_brightness_drag_settings {
     bool inverted;
 };
 
+#ifdef __ZEPHYR__
+#include <zephyr/sys/util.h>
+/* Rotating the image 180 does not rotate the touch panel, so the drag direction flips. */
+#define PROSPECTOR_TOUCH_BRIGHTNESS_DRAG_SETTINGS_DEFAULT                                          \
+    {                                                                                              \
+        .travel = CONFIG_PROSPECTOR_TOUCH_BRIGHTNESS_TRAVEL,                                       \
+        .inverted = IS_ENABLED(CONFIG_PROSPECTOR_ROTATE_DISPLAY_180),                              \
+    }
+#endif
+
 struct prospector_touch_brightness_drag_state {
     int start_tracked;
     int start_level;

@@ -16,3 +16,5 @@ default is expected to fail the cases that turn on the size of a level; re-deriv
 rather than scaling the numbers.
 
 - `touch_brightness_drag_test.c`: cases for the drag reducer, one behaviour each.
+- `touch_brightness_gate_test.c`: cases for the edge-swipe gate that Ferro puts in front of the
+  drag, one behaviour each.

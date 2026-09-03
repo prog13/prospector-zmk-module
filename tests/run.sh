@@ -5,6 +5,7 @@ set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 include="$root/boards/shields/prospector_adapter/include"
 reducer="$root/boards/shields/prospector_adapter/src/touch_brightness_drag.c"
+gate="$root/boards/shields/prospector_adapter/src/touch_brightness_gate.c"
 out=$(mktemp -d)
 trap 'rm -rf "$out"' EXIT
 
@@ -22,3 +23,9 @@ cc -std=c99 -Wall -Wextra -Werror -I"$include" \
    "$root/tests/touch_brightness_drag_test.c" "$reducer"
 
 "$out/touch_brightness_drag_test"
+
+cc -std=c11 -Wall -Wextra -Werror -I"$include" \
+   -o "$out/touch_brightness_gate_test" \
+   "$root/tests/touch_brightness_gate_test.c" "$gate"
+
+"$out/touch_brightness_gate_test"

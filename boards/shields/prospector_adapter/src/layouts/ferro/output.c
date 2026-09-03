@@ -34,32 +34,12 @@ static uint8_t active_profile_index = 0;
 static enum zmk_transport active_transport = ZMK_TRANSPORT_USB;
 static bool output_visible = false;
 
-/* Hand-rolled instead of lv_obj_fade_in/out because ferro has to be told about every opacity
- * step; LVGL's own fade would animate with nothing redrawing. */
-static void fade_done(lv_anim_t *anim) {
-    lv_obj_remove_local_style_prop(anim->var, LV_STYLE_OPA, LV_PART_MAIN);
-    zmk_widget_ferro_blobs_text_dirty();
-}
-
-static void fade_container(lv_obj_t *obj, bool in) {
-    lv_anim_t anim;
-    lv_anim_init(&anim);
-    lv_anim_set_var(&anim, obj);
-    lv_anim_set_values(&anim, in ? 0 : LV_OPA_COVER, in ? LV_OPA_COVER : 0);
-    lv_anim_set_exec_cb(&anim, set_symbol_opa);
-    if (in) {
-        lv_anim_set_completed_cb(&anim, fade_done);
-    }
-    lv_anim_set_duration(&anim, 200);
-    lv_anim_start(&anim);
-}
-
 static void set_output_visible(bool visible) {
     output_visible = visible;
 
     struct zmk_widget_output *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
-        fade_container(widget->container, visible);
+        zmk_widget_ferro_blobs_fade(widget->container, visible);
         /* Stop the breathing animation while hidden. It nudges ferro every LVGL tick and would
          * keep waking the renderer for a widget nobody can see. */
         if (visible) {
