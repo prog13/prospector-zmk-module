@@ -101,6 +101,10 @@ static void wpm_smooth_work_handler(struct k_work *work) {
                 peak_changed = true;
             }
         }
+    } else {
+        /* The next drop gets a full hold. */
+        peak_hold_counter = 0;
+        peak_decay_counter = 0;
     }
 
     if (old_int != new_int || peak_changed) {
@@ -108,13 +112,13 @@ static void wpm_smooth_work_handler(struct k_work *work) {
     }
 
     if (!at_target || peak_position > active_bars) {
-        k_work_schedule(&wpm_smooth_work, K_MSEC(33));
+        k_work_schedule_for_queue(zmk_display_work_q(), &wpm_smooth_work, K_MSEC(33));
     }
 }
 
 static void wpm_meter_update_cb(struct wpm_meter_state state) {
     target_wpm = (float)state.wpm;
-    k_work_schedule(&wpm_smooth_work, K_NO_WAIT);
+    k_work_schedule_for_queue(zmk_display_work_q(), &wpm_smooth_work, K_NO_WAIT);
 }
 
 static struct wpm_meter_state wpm_meter_get_state(const zmk_event_t *eh) {
@@ -209,10 +213,11 @@ int zmk_widget_wpm_meter_init(struct zmk_widget_wpm_meter *widget, lv_obj_t *par
     lv_obj_align(widget->layer_label, LV_ALIGN_BOTTOM_RIGHT, 9, 7);
 
     sys_slist_append(&widgets, &widget->node);
+
+    /* widget_wpm_meter_init schedules this work, so it must exist first. */
+    k_work_init_delayable(&wpm_smooth_work, wpm_smooth_work_handler);
     widget_wpm_meter_init();
     widget_wpm_meter_layer_init();
-
-    k_work_init_delayable(&wpm_smooth_work, wpm_smooth_work_handler);
 
     return 0;
 }
