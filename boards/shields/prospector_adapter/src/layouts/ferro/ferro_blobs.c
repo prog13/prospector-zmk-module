@@ -8,9 +8,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <math.h>
 #include <string.h>
 #include <lvgl.h>
-#include <zmk/event_manager.h>
-#include <zmk/events/wpm_state_changed.h>
 #include <zephyr/kernel.h>
+#include <wpm_idle.h>
 
 #include <zephyr/drivers/display.h>
 
@@ -246,9 +245,6 @@ static inline decay_param_t compute_decay_param(
 }
 
 static float intensity = 0.0f;
-static uint32_t last_keypress_time = 0;
-static int current_wpm = 0;
-static bool animation_started = false;
 
 static struct k_spinlock contact_lock;
 static int16_t contact_x, contact_y; /* Screen pixels, written from the input thread */
@@ -307,32 +303,6 @@ extern uint32_t prospector_panel_writes, prospector_panel_px;
 static uint32_t ferro_panel_writes, ferro_panel_px;
 static uint32_t panel_writes_seen;
 static uint32_t panel_foreign_repairs;
-
-static int wpm_event_handler(const zmk_event_t *eh) {
-    const struct zmk_wpm_state_changed *ev = as_zmk_wpm_state_changed(eh);
-    if (ev) {
-        uint32_t now = k_uptime_get_32();
-        int new_wpm = ev->state;
-
-        if (now < 10000) {
-            return ZMK_EV_EVENT_BUBBLE;
-        }
-
-        if (new_wpm > 300) {
-            return ZMK_EV_EVENT_BUBBLE;
-        }
-
-        current_wpm = new_wpm;
-        if (current_wpm > 0) {
-            last_keypress_time = now;
-            animation_started = true;
-        }
-    }
-    return ZMK_EV_EVENT_BUBBLE;
-}
-
-ZMK_LISTENER(widget_ferro_blobs, wpm_event_handler);
-ZMK_SUBSCRIPTION(widget_ferro_blobs, zmk_wpm_state_changed);
 
 static float envelope_advance(float level, bool pressed, uint32_t ms) {
     float rate = (float)ms / (pressed ? TOUCH_RISE_MS : TOUCH_FALL_MS);
@@ -1146,7 +1116,8 @@ static void ferro_update(void) {
     }
 
     uint32_t now = k_uptime_get_32();
-    uint32_t idle_ms = now - last_keypress_time;
+    uint32_t idle_ms = prospector_wpm_idle_ms(now);
+    const int current_wpm = prospector_wpm_current();
 
     const uint32_t INTENSITY_DECAY_MS = CONFIG_PROSPECTOR_ANIMATION_INTENSITY_DECAY_SEC * 1000;
 
@@ -1540,12 +1511,13 @@ static void timer_cb(lv_timer_t *timer) {
     }
 
     uint32_t now = k_uptime_get_32();
-    uint32_t idle_ms = now - last_keypress_time;
+    uint32_t idle_ms = prospector_wpm_idle_ms(now);
+    const int current_wpm = prospector_wpm_current();
 
     uint32_t target_period;
     if (current_wpm > 0 || contact_pressed || touch_level > 0.0f) {
         target_period = TIMER_PERIOD_30HZ;
-    } else if (animation_started && idle_ms < DEEP_IDLE_AFTER_MS) {
+    } else if (prospector_wpm_seen() && idle_ms < DEEP_IDLE_AFTER_MS) {
         target_period = TIMER_PERIOD_15HZ;
     } else {
         target_period = TIMER_PERIOD_2HZ;

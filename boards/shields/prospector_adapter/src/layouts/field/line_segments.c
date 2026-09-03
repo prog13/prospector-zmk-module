@@ -7,9 +7,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <lvgl.h>
-#include <zmk/event_manager.h>
-#include <zmk/events/wpm_state_changed.h>
 #include <zephyr/kernel.h>
+#include <wpm_idle.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
@@ -147,9 +146,6 @@ static float lines_time = 0.0f;
 static float idle_wobble_time = 0.0f;
 static float flow = 0.0f;
 static float intensity = 0.0f;
-static uint32_t last_keypress_time = 0;
-static int current_wpm = 0;
-static bool animation_started = false;
 
 static float smoothed_angles[GRID_COLS * GRID_ROWS];
 static uint8_t line_endpoint_idx[GRID_COLS * GRID_ROWS];
@@ -168,32 +164,6 @@ static float lines_noise(float x, float y, float t) {
     float n2 = fast_sin(y * 0.006f + t * 0.1f + x * 0.005f);
     return (n1 + n2 * 0.7f) / 1.7f;
 }
-
-static int wpm_event_handler(const zmk_event_t *eh) {
-    const struct zmk_wpm_state_changed *ev = as_zmk_wpm_state_changed(eh);
-    if (ev) {
-        uint32_t now = k_uptime_get_32();
-        int new_wpm = ev->state;
-
-        if (now < 10000) {
-            return ZMK_EV_EVENT_BUBBLE;
-        }
-
-        if (new_wpm > 300) {
-            return ZMK_EV_EVENT_BUBBLE;
-        }
-
-        current_wpm = new_wpm;
-        if (current_wpm > 0) {
-            last_keypress_time = now;
-            animation_started = true;
-        }
-    }
-    return ZMK_EV_EVENT_BUBBLE;
-}
-
-ZMK_LISTENER(widget_line_segments, wpm_event_handler);
-ZMK_SUBSCRIPTION(widget_line_segments, zmk_wpm_state_changed);
 
 // Calculate how many columns a label width covers (starting from column 0)
 static int width_to_columns(int width) {
@@ -254,7 +224,8 @@ static void lines_update(void) {
 
     const float delta_time = 1.0f / 30.0f;
     uint32_t now = k_uptime_get_32();
-    uint32_t idle_ms = now - last_keypress_time;
+    uint32_t idle_ms = prospector_wpm_idle_ms(now);
+    const int current_wpm = prospector_wpm_current();
 
     const uint32_t INTENSITY_DECAY_MS = CONFIG_PROSPECTOR_ANIMATION_INTENSITY_DECAY_SEC * 1000;
     const uint32_t FLOW_DECAY_MS = CONFIG_PROSPECTOR_ANIMATION_FLOW_DECAY_SEC * 1000;
@@ -382,12 +353,13 @@ static void draw_cb(lv_event_t *e) {
 
 static void timer_cb(lv_timer_t *timer) {
     uint32_t now = k_uptime_get_32();
-    uint32_t idle_ms = now - last_keypress_time;
+    uint32_t idle_ms = prospector_wpm_idle_ms(now);
+    const int current_wpm = prospector_wpm_current();
 
     uint32_t target_period;
     if (current_wpm > 0) {
         target_period = TIMER_PERIOD_30HZ;
-    } else if (animation_started && idle_ms < CONFIG_PROSPECTOR_ANIMATION_FLOW_DECAY_SEC * 1000) {
+    } else if (prospector_wpm_seen() && idle_ms < CONFIG_PROSPECTOR_ANIMATION_FLOW_DECAY_SEC * 1000) {
         target_period = TIMER_PERIOD_15HZ;
     } else {
         target_period = TIMER_PERIOD_2HZ;

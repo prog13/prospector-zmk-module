@@ -8,9 +8,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <lvgl.h>
-#include <zmk/event_manager.h>
-#include <zmk/events/wpm_state_changed.h>
 #include <zephyr/kernel.h>
+#include <wpm_idle.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
@@ -160,9 +159,6 @@ static inline decay_param_t compute_decay_param(
 }
 
 static float intensity = 0.0f;
-static uint32_t last_keypress_time = 0;
-static int current_wpm = 0;
-static bool animation_started = false;
 
 static uint8_t line_endpoint_idx[CELL_COUNT];
 static float line_length_scale[CELL_COUNT];
@@ -186,32 +182,6 @@ static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 static lv_timer_t *animation_timer = NULL;
 static lv_timer_t *contact_poll_timer = NULL;
 static uint32_t last_timer_period = TIMER_PERIOD_30HZ;
-
-static int wpm_event_handler(const zmk_event_t *eh) {
-    const struct zmk_wpm_state_changed *ev = as_zmk_wpm_state_changed(eh);
-    if (ev) {
-        uint32_t now = k_uptime_get_32();
-        int new_wpm = ev->state;
-
-        if (now < 10000) {
-            return ZMK_EV_EVENT_BUBBLE;
-        }
-
-        if (new_wpm > 300) {
-            return ZMK_EV_EVENT_BUBBLE;
-        }
-
-        current_wpm = new_wpm;
-        if (current_wpm > 0) {
-            last_keypress_time = now;
-            animation_started = true;
-        }
-    }
-    return ZMK_EV_EVENT_BUBBLE;
-}
-
-ZMK_LISTENER(widget_flux_lines, wpm_event_handler);
-ZMK_SUBSCRIPTION(widget_flux_lines, zmk_wpm_state_changed);
 
 /* lv_obj_get_coords is screen-absolute while grid_cx is relative to the widget, hence the
  * subtraction. */
@@ -305,7 +275,8 @@ static void flux_update(void) {
     uint32_t start = k_cycle_get_32();
 
     uint32_t now = k_uptime_get_32();
-    uint32_t idle_ms = now - last_keypress_time;
+    uint32_t idle_ms = prospector_wpm_idle_ms(now);
+    const int current_wpm = prospector_wpm_current();
 
     const uint32_t INTENSITY_DECAY_MS = CONFIG_PROSPECTOR_ANIMATION_INTENSITY_DECAY_SEC * 1000;
 
@@ -463,7 +434,7 @@ static void draw_cb(lv_event_t *e) {
     if (perf_frame_count >= 30) {
         LOG_DBG("perf: update=%uus draw=%uus period=%ums wpm=%d int=%d%% "
                 "draws=%u ticks=%u draw_sum=%uus",
-                perf_update_us, perf_draw_us, last_timer_period, current_wpm,
+                perf_update_us, perf_draw_us, last_timer_period, prospector_wpm_current(),
                 (int)(intensity * 100.0f), perf_frame_count, perf_tick_count, perf_draw_us_sum);
         perf_frame_count = 0;
         perf_tick_count = 0;
@@ -486,12 +457,13 @@ static void contact_poll_cb(lv_timer_t *timer) {
 static void timer_cb(lv_timer_t *timer) {
     perf_tick_count++;
     uint32_t now = k_uptime_get_32();
-    uint32_t idle_ms = now - last_keypress_time;
+    uint32_t idle_ms = prospector_wpm_idle_ms(now);
+    const int current_wpm = prospector_wpm_current();
 
     uint32_t target_period;
     if (current_wpm > 0 || contact_pressed || touch_level > 0.0f) {
         target_period = TIMER_PERIOD_30HZ;
-    } else if (animation_started && idle_ms < DEEP_IDLE_AFTER_MS) {
+    } else if (prospector_wpm_seen() && idle_ms < DEEP_IDLE_AFTER_MS) {
         target_period = TIMER_PERIOD_15HZ;
     } else {
         target_period = TIMER_PERIOD_2HZ;
